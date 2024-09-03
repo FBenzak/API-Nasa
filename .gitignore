@@ -1,162 +1,105 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import requests as request
+from datetime import datetime
+import subprocess
+import sys
 
-# C extensions
-*.so
+#Instalar um pacote
+def instalar_pacote(pacote):
+    try:
+        __import__(pacote)
+    except ImportError:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', pacote])
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+#Instalar o módulo requests
+instalar_pacote('requests')
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+import requests
+from datetime import datetime
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+def obter_imagem_do_dia(api_key, data=None):
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+    url = 'https://api.nasa.gov/planetary/apod'
+    params = {
+        'api_key': api_key
+    }
+    if data:
+        params['date'] = data
 
-# Translations
-*.mo
-*.pot
+    try:
+# Fazer a solicitação GET
+        response = requests.get(url, params=params)
+        print(f'Resposta da API: {response.status_code}')  # Adicionando status code para diagnóstico
+# Verificar se a solicitação foi bem-sucedida
+        response.raise_for_status()
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+# Converter a resposta em JSON
+        data = response.json()
 
-# Flask stuff:
-instance/
-.webassets-cache
+# Retornar a URL da imagem e a descrição
+        return data['url'], data['explanation']
 
-# Scrapy stuff:
-.scrapy
+    except requests.RequestException as e:
 
-# Sphinx documentation
-docs/_build/
+# Tratar erros de solicitação e retornar uma mensagem de erro
+        return f'Erro ao obter a imagem: {e}', None
 
-# PyBuilder
-.pybuilder/
-target/
+def main():
+    """
+    Função principal que solicita a chave da API e fornece a Imagem do Dia da NASA ou uma imagem de uma data específica.
+    """
+# Solicitar a chave de API do usuário
+    api_key = input("Digite a chave da API da NASA: ").strip()
 
-# Jupyter Notebook
-.ipynb_checkpoints
+    if not api_key:
+        print("Erro: A chave da API não foi fornecida.")
+        return
 
-# IPython
-profile_default/
-ipython_config.py
+    while True:
+        print("\nEscolha uma opção:")
+        print("1. Obter a imagem do dia")
+        print("2. Solicitar uma imagem para uma data específica")
+        print("3. Sair")
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+        escolha = input("Digite o número da opção desejada: ").strip()
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+        if escolha == '1':
+# Solicitar a imagem do dia atual
+            url, descricao = obter_imagem_do_dia(api_key)
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
+            if descricao:
+                print('Imagem do Dia da NASA:')
+                print(f'URL da Imagem: {url}')
+                print(f'Descrição: {descricao}')
+            else:
+                print(url)
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/latest/usage/project/#working-with-version-control
-.pdm.toml
-.pdm-python
-.pdm-build/
+        elif escolha == '2':
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+# Solicitar uma imagem para uma data específica
+            data = input("Digite a data no formato YYYY-MM-DD: ").strip()
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+# Validar o formato da data
+            try:
+                datetime.strptime(data, '%Y-%m-%d')
+            except ValueError:
+                print("Erro: Data no formato inválido. Use o formato YYYY-MM-DD.")
+                continue
 
-# SageMath parsed files
-*.sage.py
+            url, descricao = obter_imagem_do_dia(api_key, data)
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+            if descricao:
+                print('Imagem para a Data Solicitada:')
+                print(f'URL da Imagem: {url}')
+                print(f'Descrição: {descricao}')
+            else:
+                print(url)
 
-# Spyder project settings
-.spyderproject
-.spyproject
+        elif escolha == '3':
+            print('Saindo...')
+            break
 
-# Rope project settings
-.ropeproject
+        else:
+            print('Erro: Opção inválida. Tente novamente.')
 
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+if __name__ == "__main__":
+    main()
